@@ -1,2 +1,116 @@
-<title> TheLuaFox86's Dev Site </title>
-<a href="modded.html">Open EaglerForge</a>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> TheLuaFox86's Dev Site </title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      background-color: #282c34;
+      color: white;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .upload-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+    }
+
+    input[type="file"] {
+      color: white;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="upload-container">
+    <input type="file" id="htmlFileInput" accept=".html">
+    <input type="file" id="zipFileInput" accept=".zip">
+  </div>
+
+  <div class="content" id="content">
+    <p>Upload an HTML file or a ZIP file containing an HTML page to view it in full screen.</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    // Function to enable full-screen mode
+    function goFullScreen() {
+      const doc = document.documentElement;
+      if (doc.requestFullscreen) {
+        doc.requestFullscreen();
+      } else if (doc.mozRequestFullScreen) {
+        doc.mozRequestFullScreen();
+      } else if (doc.webkitRequestFullscreen) {
+        doc.webkitRequestFullscreen();
+      } else if (doc.msRequestFullscreen) {
+        doc.msRequestFullscreen();
+      }
+    }
+
+    // Automatically enable full-screen on load
+    window.onload = goFullScreen;
+
+    // Handle HTML file upload and rendering
+    document.getElementById('htmlFileInput').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file && file.type === 'text/html') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const content = e.target.result;
+          document.getElementById('content').innerHTML = content;
+          goFullScreen(); // Go full screen after rendering
+        };
+        reader.readAsText(file);
+      } else {
+        alert("Please upload a valid HTML file.");
+      }
+    });
+
+    // Handle ZIP file upload and extract HTML
+    document.getElementById('zipFileInput').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file && file.name.endsWith('.zip')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const zip = new JSZip();
+          zip.loadAsync(e.target.result).then(function(contents) {
+            // Find the HTML file in the ZIP and render it
+            for (let filename in contents.files) {
+              if (filename.endsWith('.html')) {
+                contents.files[filename].async('text').then(function(htmlContent) {
+                  document.getElementById('content').innerHTML = htmlContent;
+                  goFullScreen(); // Go full screen after rendering
+                });
+                break;
+              }
+            }
+          }).catch(function(error) {
+            alert("Error reading the ZIP file.");
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert("Please upload a valid ZIP file.");
+      }
+    });
+  </script>
+</body>
+</html>
